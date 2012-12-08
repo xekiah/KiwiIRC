@@ -301,6 +301,8 @@ html, body { height:100%; }
 /* Tab texts are within a span */
 #kiwi.theme_relaxed #toolbar .panellist li span  { line-height:20px; vertical-align:middle; display:block; }
 
+#kiwi.theme_relaxed .panel_container.container1 { border-right:1px solid #8A8A8A; }
+
 #kiwi.theme_relaxed #status_message {
     background: #FEEFB3; color: #9F6000;
     border-bottom: 1px solid;
