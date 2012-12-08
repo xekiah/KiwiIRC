@@ -274,12 +274,10 @@ _kiwi.view.Panel = Backbone.View.extend({
 
         // Containing element for this panel
         if (options.container) {
-            this.$container = $(options.container);
+            this.setContainer(options.container);
         } else {
-            this.$container = $('#panels .container1');
+            this.setContainer($('#kiwi .panel_container.container2'));
         }
-
-        this.$el.appendTo(this.$container);
 
         this.alert_level = 0;
 
@@ -293,6 +291,27 @@ _kiwi.view.Panel = Backbone.View.extend({
         this.$el.empty();
         this.model.get("backscroll").forEach(this.newMsg);
     },
+
+    onClose: function () {
+        // If this is the last panel left in its container, turn off the
+        // dual container mode
+        if (this.$container.children().length === 1) {
+            _kiwi.app.view.toggleDualContainers();
+        }
+    },
+
+    setContainer: function (new_container) {
+        this.$container = $(new_container);
+
+        // If this container isn't open, open both containers
+        if (!this.$container.is(':visible')) {
+            _kiwi.app.view.toggleDualContainers();
+        }
+
+        this.$el.appendTo(this.$container);
+    },
+
+
     newMsg: function (msg) {
         // TODO: make sure that the message pane is scrolled to the bottom (Or do we? ~Darren)
         var re, line_msg, $this = this.$el,
@@ -526,6 +545,12 @@ _kiwi.view.Panel = Backbone.View.extend({
 _kiwi.view.Applet = _kiwi.view.Panel.extend({
     className: 'applet',
     initialize: function (options) {
+        // If we haven't specified a container and the client size isn't too small,
+        // put this applet side by side (dual container mode)
+        if (!options.container && _kiwi.app.view.$el.width() > 950) {
+            options.container = $('#kiwi .panel_container.container1');
+        }
+
         this.initializePanel(options);
     }
 });
@@ -1005,9 +1030,11 @@ _kiwi.view.AppToolbar = Backbone.View.extend({
 
 _kiwi.view.Application = Backbone.View.extend({
     initialize: function () {
-        $(window).resize(this.doLayout);
-        $('#toolbar').resize(this.doLayout);
-        $('#controlbox').resize(this.doLayout);
+        var that = this;
+
+        $(window).resize(function () { that.doLayout(); });
+        $('#toolbar').resize(function () { that.doLayout(); });
+        $('#controlbox').resize(function () { that.doLayout(); });
 
         // Change the theme when the config is changed
         _kiwi.global.settings.on('change:theme', this.updateTheme, this);
@@ -1015,7 +1042,7 @@ _kiwi.view.Application = Backbone.View.extend({
 
         this.doLayout();
 
-        $(document).keydown(this.setKeyFocus);
+        $(document).keydown(function (event) { that.setKeyFocus(event); });
 
         // Confirmation require to leave the page
         window.onbeforeunload = function () {
@@ -1101,6 +1128,18 @@ _kiwi.view.Application = Backbone.View.extend({
             // And move the handle just out of sight to the right
             el_resize_handle.css('left', el_panels.outerWidth(true));
         }
+
+        // Apply dual container
+        if (this.dual_containers) {
+            $('#kiwi .panel_container')
+                .width(el_panels.width() / 2 - 1)
+                .css('float', 'left');
+            $('#kiwi .panel_container.container1').show();
+        } else {
+            $('#kiwi .panel_container')
+                .css({float: 'none', width: 'auto'});
+            $('#kiwi .panel_container.container1').hide();
+        }
     },
 
 
@@ -1172,6 +1211,12 @@ _kiwi.view.Application = Backbone.View.extend({
         }
 
         this.alertWindowTimer.start(title);
+    },
+
+
+    toggleDualContainers: function () {
+        this.dual_containers = this.dual_containers ? false : true;
+        this.doLayout();
     },
 
 

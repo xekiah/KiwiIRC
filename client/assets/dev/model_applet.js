@@ -69,11 +69,6 @@ _kiwi.model.Applet = _kiwi.model.Panel.extend({
 
 
     close: function () {
-        this.view.$el.remove();
-        this.destroy();
-        
-        this.view = undefined;
-
         // Call the applets dispose method if it has one
         if (this.loaded_applet && this.loaded_applet.dispose) {
             this.loaded_applet.dispose();
